@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Venta de Entradas — Evento</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --green: #1D9E75;
+    --green-light: #E1F5EE;
+    --green-dark: #085041;
+    --amber: #EF9F27;
+    --amber-light: #FAEEDA;
+    --coral: #D85A30;
+    --bg: #0e0e0e;
+    --surface: #181818;
+    --surface2: #222;
+    --border: rgba(255,255,255,0.08);
+    --text: #f0ede6;
+    --muted: #888;
+    --font-display: 'Syne', sans-serif;
+    --font-body: 'DM Sans', sans-serif;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── HERO ── */
+  .hero {
+    position: relative;
+    padding: 3rem 1.5rem 2rem;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 70% 60% at 50% 0%, rgba(29,158,117,0.18) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .event-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(29,158,117,0.15);
+    border: 1px solid rgba(29,158,117,0.3);
+    color: #5DCAA5;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 5px 14px;
+    border-radius: 100px;
+    margin-bottom: 1.2rem;
+  }
+  .event-badge::before { content: '●'; font-size: 7px; }
+  .hero h1 {
+    font-family: var(--font-display);
+    font-size: clamp(2.2rem, 6vw, 3.8rem);
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    margin-bottom: 0.8rem;
+  }
+  .hero h1 span { color: var(--green); }
+  .hero-meta {
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    margin-top: 1.2rem;
+  }
+  .meta-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .meta-item svg { opacity: 0.6; }
+
+  /* ── LAYOUT ── */
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 4rem;
+    display: grid;
+    grid-template-columns: 1fr 360px;
+    gap: 2rem;
+    align-items: start;
+  }
+  @media (max-width: 720px) {
+    .container { grid-template-columns: 1fr; }
+    .sidebar { order: -1; }
+  }
+
+  /* ── CARD ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.5rem;
+  }
+  .card-title {
+    font-family: var(--font-display);
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 1.2rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .card-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* ── FORM ── */
+  .field { margin-bottom: 1.1rem; }
+  label {
+    display: block;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  label .req { color: var(--green); margin-left: 2px; }
+
+  input[type="text"],
+  input[type="email"],
+  input[type="tel"],
+  select {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 11px 14px;
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s;
+    appearance: none;
+  }
+  input:focus, select:focus {
+    border-color: rgba(29,158,117,0.5);
+    box-shadow: 0 0 0 3px rgba(29,158,117,0.08);
+  }
+  input::placeholder { color: #444; }
+  select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px; }
+
+  .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  /* ── TICKET SELECTOR ── */
+  .ticket-type {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: border-color 0.2s;
+  }
+  .ticket-type:has(.qty-input:not([value="0"])) {
+    border-color: rgba(29,158,117,0.35);
+  }
+  .ticket-info { flex: 1; }
+  .ticket-name { font-size: 14px; font-weight: 500; }
+  .ticket-desc { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .ticket-price {
+    font-family: var(--font-display);
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--green);
+    margin-right: 16px;
+  }
+  .qty-control {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 4px;
+  }
+  .qty-btn {
+    width: 28px; height: 28px;
+    border: none;
+    background: transparent;
+    color: var(--text);
+    font-size: 18px;
+    cursor: pointer;
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.15s;
+    line-height: 1;
+  }
+  .qty-btn:hover { background: rgba(255,255,255,0.07); }
+  .qty-num {
+    min-width: 24px;
+    text-align: center;
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  /* ── SIDEBAR ── */
+  .summary-line {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    color: var(--muted);
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .summary-line:last-of-type { border-bottom: none; }
+  .summary-line.total {
+    color: var(--text);
+    font-size: 16px;
+    font-weight: 500;
+    padding-top: 10px;
+    margin-top: 4px;
+    border-top: 1px solid var(--border);
+  }
+  .summary-line.total span:last-child {
+    font-family: var(--font-display);
+    color: var(--green);
+    font-weight: 700;
+    font-size: 18px;
+  }
+
+  .whatsapp-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    background: #25D366;
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    padding: 15px;
+    font-family: var(--font-display);
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 1.2rem;
+    transition: background 0.2s, transform 0.1s;
+    letter-spacing: 0.02em;
+  }
+  .whatsapp-btn:hover { background: #1ebe5a; }
+  .whatsapp-btn:active { transform: scale(0.98); }
+  .whatsapp-btn:disabled { background: #2a4a36; color: #5a8a6a; cursor: not-allowed; }
+
+  .whatsapp-note {
+    text-align: center;
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 10px;
+    line-height: 1.5;
+  }
+
+  /* ── DB PANEL ── */
+  .db-toggle {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 12px;
+    font-family: var(--font-body);
+    padding: 8px 14px;
+    border-radius: 100px;
+    cursor: pointer;
+    z-index: 100;
+    transition: border-color 0.2s;
+  }
+  .db-toggle:hover { border-color: rgba(255,255,255,0.2); color: var(--text); }
+
+  .db-panel {
+    position: fixed;
+    bottom: 60px;
+    right: 20px;
+    width: min(520px, calc(100vw - 40px));
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    z-index: 99;
+    display: none;
+    flex-direction: column;
+    max-height: 420px;
+  }
+  .db-panel.open { display: flex; }
+  .db-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+    font-weight: 500;
+  }
+  .db-count {
+    background: rgba(29,158,117,0.15);
+    color: #5DCAA5;
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 100px;
+  }
+  .db-body { overflow-y: auto; flex: 1; padding: 10px; }
+  .db-row {
+    background: var(--surface2);
+    border-radius: 10px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    font-size: 12px;
+    line-height: 1.6;
+  }
+  .db-row-name { font-weight: 500; font-size: 13px; color: var(--text); }
+  .db-row-detail { color: var(--muted); }
+  .db-row-ticket {
+    display: inline-block;
+    background: rgba(29,158,117,0.12);
+    color: #5DCAA5;
+    font-size: 10px;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: 100px;
+    margin-top: 4px;
+  }
+  .db-empty { text-align: center; color: var(--muted); font-size: 13px; padding: 2rem 0; }
+  .db-clear-btn {
+    background: transparent;
+    border: none;
+    color: var(--muted);
+    font-size: 11px;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 6px;
+  }
+  .db-clear-btn:hover { color: var(--coral); }
+
+  /* ── TOAST ── */
+  .toast {
+    position: fixed;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--green-dark);
+    color: #9FE1CB;
+    font-size: 13px;
+    padding: 10px 20px;
+    border-radius: 100px;
+    border: 1px solid rgba(29,158,117,0.3);
+    opacity: 0;
+    transition: opacity 0.3s, transform 0.3s;
+    white-space: nowrap;
+    z-index: 200;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* ── ERROR ── */
+  .error-msg {
+    font-size: 11px;
+    color: #E24B4A;
+    margin-top: 4px;
+    display: none;
+  }
+  .field.invalid input,
+  .field.invalid select { border-color: rgba(226,75,74,0.5); }
+  .field.invalid .error-msg { display: block; }
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="event-badge">Venta de entradas</div>
+  <h1>Festival <span>Noche</span><br>de Verano 2025</h1>
+  <div class="hero-meta">
+    <div class="meta-item">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      15 de Agosto, 2025
+    </div>
+    <div class="meta-item">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+      Anfiteatro Central, Ciudad
+    </div>
+    <div class="meta-item">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      20:00 hrs
+    </div>
+  </div>
+</div>
+
+<!-- MAIN LAYOUT -->
+<div class="container">
+
+  <!-- FORMULARIO -->
+  <div>
+    <!-- DATOS PERSONALES -->
+    <div class="card" style="margin-bottom:1.5rem">
+      <div class="card-title">Datos del comprador</div>
+
+      <div class="row-2">
+        <div class="field" id="f-nombre">
+          <label>Nombre<span class="req">*</span></label>
+          <input type="text" id="nombre" placeholder="Juan García" />
+          <div class="error-msg">Ingresa tu nombre completo</div>
+        </div>
+        <div class="field" id="f-apellido">
+          <label>Apellido<span class="req">*</span></label>
+          <input type="text" id="apellido" placeholder="Pérez" />
+          <div class="error-msg">Ingresa tu apellido</div>
+        </div>
+      </div>
+
+      <div class="field" id="f-email">
+        <label>Correo electrónico<span class="req">*</span></label>
+        <input type="email" id="email" placeholder="juan@email.com" />
+        <div class="error-msg">Ingresa un correo válido</div>
+      </div>
+
+      <div class="row-2">
+        <div class="field" id="f-telefono">
+          <label>WhatsApp<span class="req">*</span></label>
+          <input type="tel" id="telefono" placeholder="+52 55 1234 5678" />
+          <div class="error-msg">Ingresa tu número de WhatsApp</div>
+        </div>
+        <div class="field" id="f-ciudad">
+          <label>Ciudad</label>
+          <input type="text" id="ciudad" placeholder="Ciudad de México" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label>¿Cómo te enteraste?</label>
+        <select id="fuente">
+          <option value="">— Selecciona —</option>
+          <option>Instagram</option>
+          <option>Facebook</option>
+          <option>TikTok</option>
+          <option>Recomendación</option>
+          <option>Volante / Cartel</option>
+          <option>Otro</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Notas adicionales</label>
+        <input type="text" id="notas" placeholder="Ej. necesito silla de ruedas, asistencia especial..." />
+      </div>
+    </div>
+
+    <!-- ENTRADAS -->
+    <div class="card">
+      <div class="card-title">Selecciona tus entradas</div>
+
+      <div class="ticket-type">
+        <div class="ticket-info">
+          <div class="ticket-name">General</div>
+          <div class="ticket-desc">Acceso al área general del evento</div>
+        </div>
+        <div class="ticket-price" id="price-general">$250</div>
+        <div class="qty-control">
+          <button class="qty-btn" onclick="changeQty('general',-1)">−</button>
+          <div class="qty-num" id="qty-general">0</div>
+          <button class="qty-btn" onclick="changeQty('general',1)">+</button>
+        </div>
+      </div>
+
+      <div class="ticket-type">
+        <div class="ticket-info">
+          <div class="ticket-name">VIP</div>
+          <div class="ticket-desc">Acceso zona VIP + consumo incluido</div>
+        </div>
+        <div class="ticket-price" id="price-vip">$550</div>
+        <div class="qty-control">
+          <button class="qty-btn" onclick="changeQty('vip',-1)">−</button>
+          <div class="qty-num" id="qty-vip">0</div>
+          <button class="qty-btn" onclick="changeQty('vip',1)">+</button>
+        </div>
+      </div>
+
+      <div class="ticket-type">
+        <div class="ticket-info">
+          <div class="ticket-name">Palco Premium</div>
+          <div class="ticket-desc">Palco privado + mesa + servicio exclusivo</div>
+        </div>
+        <div class="ticket-price" id="price-palco">$1,200</div>
+        <div class="qty-control">
+          <button class="qty-btn" onclick="changeQty('palco',-1)">−</button>
+          <div class="qty-num" id="qty-palco">0</div>
+          <button class="qty-btn" onclick="changeQty('palco',1)">+</button>
+        </div>
+      </div>
+
+      <div id="ticket-error" style="font-size:12px;color:#E24B4A;margin-top:8px;display:none">
+        Selecciona al menos una entrada para continuar.
+      </div>
+    </div>
+  </div>
+
+  <!-- SIDEBAR RESUMEN -->
+  <div class="sidebar">
+    <div class="card" style="position:sticky;top:20px">
+      <div class="card-title">Resumen</div>
+
+      <div id="summary-items">
+        <div class="summary-line" id="sum-general" style="display:none">
+          <span id="sum-general-label">General × 0</span>
+          <span id="sum-general-val">$0</span>
+        </div>
+        <div class="summary-line" id="sum-vip" style="display:none">
+          <span id="sum-vip-label">VIP × 0</span>
+          <span id="sum-vip-val">$0</span>
+        </div>
+        <div class="summary-line" id="sum-palco" style="display:none">
+          <span id="sum-palco-label">Palco × 0</span>
+          <span id="sum-palco-val">$0</span>
+        </div>
+        <div id="sum-empty" style="font-size:13px;color:var(--muted);padding:8px 0;">Aún no has elegido entradas.</div>
+      </div>
+
+      <div class="summary-line total">
+        <span>Total</span>
+        <span id="total-display">$0</span>
+      </div>
+
+      <!-- INFO PAGO -->
+      <div style="margin-top:1rem;background:rgba(239,159,39,0.08);border:1px solid rgba(239,159,39,0.2);border-radius:10px;padding:12px 14px;font-size:12px;color:#FAC775;line-height:1.6">
+        <strong style="display:block;margin-bottom:4px;font-size:13px">💳 Métodos de pago</strong>
+        Transferencia bancaria · Efectivo · Mercado Pago<br>
+        <span style="color:var(--muted)">El pago se coordina por WhatsApp tras enviar el formulario.</span>
+      </div>
+
+      <button class="whatsapp-btn" id="send-btn" onclick="enviarFormulario()">
+        <svg width="20" height="20" viewBox="0 0 32 32" fill="white"><path d="M16 2C8.268 2 2 8.268 2 16c0 2.478.672 4.8 1.845 6.8L2 30l7.4-1.82A13.94 13.94 0 0 0 16 30c7.732 0 14-6.268 14-14S23.732 2 16 2zm0 2c6.617 0 12 5.383 12 12S22.617 28 16 28c-2.145 0-4.148-.572-5.875-1.57l-.42-.25-4.395 1.08 1.1-4.28-.27-.44A11.938 11.938 0 0 1 4 16C4 9.383 9.383 4 16 4zm-3.695 6.5c-.24 0-.627.09-.956.45-.328.36-1.25 1.22-1.25 2.975s1.28 3.45 1.458 3.69c.178.24 2.5 3.97 6.146 5.41.86.34 1.531.54 2.054.69.863.25 1.65.215 2.272.13.694-.094 2.136-.873 2.438-1.716.302-.843.302-1.565.21-1.716-.09-.15-.33-.24-.69-.42-.36-.18-2.13-1.05-2.46-1.17-.33-.12-.57-.18-.81.18-.24.36-.932 1.17-1.14 1.41-.21.24-.42.27-.78.09-.36-.18-1.52-.56-2.895-1.79-1.07-.955-1.794-2.135-2.004-2.495-.21-.36-.022-.555.158-.735.162-.16.36-.42.54-.63.18-.21.24-.36.36-.6.12-.24.06-.45-.03-.63-.09-.18-.81-1.95-1.11-2.67-.3-.72-.605-.615-.81-.625l-.69-.01z"/></svg>
+        Enviar por WhatsApp
+      </button>
+
+      <p class="whatsapp-note">
+        Al hacer clic se abrirá WhatsApp con tu pedido pre-llenado.<br>
+        Tu información se guarda localmente como registro.
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- DB TOGGLE -->
+<button class="db-toggle" onclick="toggleDB()">📋 Ver registros (<span id="db-count-badge">0</span>)</button>
+
+<!-- DB PANEL -->
+<div class="db-panel" id="db-panel">
+  <div class="db-header">
+    <span>Base de datos local <span class="db-count" id="db-count-tag">0 registros</span></span>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button class="db-clear-btn" onclick="exportarCSV()">⬇ CSV</button>
+      <button class="db-clear-btn" onclick="limpiarDB()">🗑 Limpiar</button>
+      <button class="db-clear-btn" onclick="toggleDB()" style="font-size:16px">×</button>
+    </div>
+  </div>
+  <div class="db-body" id="db-body"></div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── CONFIGURACIÓN ───────────────────────────────────────────────
+const CONFIG = {
+  whatsappNumber: '521234567890', // ← PON TU NÚMERO (código país sin +)
+  eventoNombre: 'Festival Noche de Verano 2025',
+  eventoFecha: '15 de Agosto 2025 · 20:00 hrs',
+  eventoLugar: 'Anfiteatro Central, Ciudad',
+  moneda: '$',
+  precios: { general: 250, vip: 550, palco: 1200 }
+};
+
+// ─── ESTADO ──────────────────────────────────────────────────────
+const qty = { general: 0, vip: 0, palco: 0 };
+
+function changeQty(tipo, delta) {
+  qty[tipo] = Math.max(0, Math.min(10, qty[tipo] + delta));
+  document.getElementById('qty-' + tipo).textContent = qty[tipo];
+  actualizarResumen();
+}
+
+function actualizarResumen() {
+  let total = 0;
+  let hayEntradas = false;
+
+  const tipos = [
+    { key: 'general', nombre: 'General' },
+    { key: 'vip', nombre: 'VIP' },
+    { key: 'palco', nombre: 'Palco Premium' }
+  ];
+
+  tipos.forEach(({ key, nombre }) => {
+    const q = qty[key];
+    const subtotal = q * CONFIG.precios[key];
+    const row = document.getElementById('sum-' + key);
+    if (q > 0) {
+      hayEntradas = true;
+      total += subtotal;
+      row.style.display = 'flex';
+      document.getElementById('sum-' + key + '-label').textContent = nombre + ' × ' + q;
+      document.getElementById('sum-' + key + '-val').textContent = CONFIG.moneda + subtotal.toLocaleString();
+    } else {
+      row.style.display = 'none';
+    }
+  });
+
+  document.getElementById('sum-empty').style.display = hayEntradas ? 'none' : 'block';
+  document.getElementById('total-display').textContent = CONFIG.moneda + total.toLocaleString();
+}
+
+// ─── VALIDACIÓN ──────────────────────────────────────────────────
+function validar() {
+  let ok = true;
+
+  const campos = [
+    { id: 'nombre', fid: 'f-nombre', regex: /\S{2,}/, msg: 'Ingresa tu nombre completo' },
+    { id: 'apellido', fid: 'f-apellido', regex: /\S{2,}/, msg: 'Ingresa tu apellido' },
+    { id: 'email', fid: 'f-email', regex: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, msg: 'Ingresa un correo válido' },
+    { id: 'telefono', fid: 'f-telefono', regex: /[\d\s\+\-]{7,}/, msg: 'Ingresa tu número de WhatsApp' }
+  ];
+
+  campos.forEach(c => {
+    const el = document.getElementById(c.id);
+    const f = document.getElementById(c.fid);
+    const valid = c.regex.test(el.value.trim());
+    f.classList.toggle('invalid', !valid);
+    if (!valid) ok = false;
+  });
+
+  const hayEntradas = qty.general + qty.vip + qty.palco > 0;
+  document.getElementById('ticket-error').style.display = hayEntradas ? 'none' : 'block';
+  if (!hayEntradas) ok = false;
+
+  return ok;
+}
+
+// ─── ENVIAR A WHATSAPP ────────────────────────────────────────────
+function enviarFormulario() {
+  if (!validar()) { showToast('⚠ Completa los campos requeridos', '#cc4400'); return; }
+
+  const nombre = document.getElementById('nombre').value.trim();
+  const apellido = document.getElementById('apellido').value.trim();
+  const email = document.getElementById('email').value.trim();
+  const telefono = document.getElementById('telefono').value.trim();
+  const ciudad = document.getElementById('ciudad').value.trim();
+  const fuente = document.getElementById('fuente').value;
+  const notas = document.getElementById('notas').value.trim();
+
+  const lineasEntradas = [];
+  if (qty.general > 0) lineasEntradas.push(`   • General × ${qty.general} → ${CONFIG.moneda}${(qty.general * CONFIG.precios.general).toLocaleString()}`);
+  if (qty.vip > 0) lineasEntradas.push(`   • VIP × ${qty.vip} → ${CONFIG.moneda}${(qty.vip * CONFIG.precios.vip).toLocaleString()}`);
+  if (qty.palco > 0) lineasEntradas.push(`   • Palco Premium × ${qty.palco} → ${CONFIG.moneda}${(qty.palco * CONFIG.precios.palco).toLocaleString()}`);
+
+  const total = qty.general * CONFIG.precios.general + qty.vip * CONFIG.precios.vip + qty.palco * CONFIG.precios.palco;
+
+  const msg = [
+    `🎟 *SOLICITUD DE ENTRADAS*`,
+    `*${CONFIG.eventoNombre}*`,
+    `📅 ${CONFIG.eventoFecha}`,
+    `📍 ${CONFIG.eventoLugar}`,
+    ``,
+    `👤 *Datos del comprador*`,
+    `   Nombre: ${nombre} ${apellido}`,
+    `   Email: ${email}`,
+    `   WhatsApp: ${telefono}`,
+    ciudad ? `   Ciudad: ${ciudad}` : null,
+    ``,
+    `🎫 *Entradas seleccionadas*`,
+    ...lineasEntradas,
+    ``,
+    `💰 *Total: ${CONFIG.moneda}${total.toLocaleString()}*`,
+    notas ? `\n📝 Notas: ${notas}` : null,
+    fuente ? `\n📣 Se enteró por: ${fuente}` : null,
+    ``,
+    `Por favor confirmen disponibilidad y método de pago. ¡Gracias! 🙌`
+  ].filter(l => l !== null).join('\n');
+
+  const url = `https://wa.me/${CONFIG.whatsappNumber}?text=${encodeURIComponent(msg)}`;
+  window.open(url, '_blank');
+
+  // Guardar en BD local
+  guardarRegistro({ nombre, apellido, email, telefono, ciudad, fuente, notas, qty: {...qty}, total, fecha: new Date().toLocaleString('es-MX') });
+  showToast('✓ Abriendo WhatsApp...');
+}
+
+// ─── BASE DE DATOS LOCAL (localStorage) ──────────────────────────
+const DB_KEY = 'entradas_registros';
+
+function guardarRegistro(data) {
+  const registros = obtenerRegistros();
+  data.id = Date.now();
+  registros.push(data);
+  localStorage.setItem(DB_KEY, JSON.stringify(registros));
+  actualizarBadge();
+  renderizarDB();
+}
+
+function obtenerRegistros() {
+  try { return JSON.parse(localStorage.getItem(DB_KEY)) || []; }
+  catch { return []; }
+}
+
+function limpiarDB() {
+  if (!confirm('¿Eliminar todos los registros?')) return;
+  localStorage.removeItem(DB_KEY);
+  actualizarBadge();
+  renderizarDB();
+  showToast('Registros eliminados');
+}
+
+function exportarCSV() {
+  const registros = obtenerRegistros();
+  if (!registros.length) { showToast('No hay registros para exportar', '#cc4400'); return; }
+
+  const headers = ['ID','Fecha','Nombre','Apellido','Email','WhatsApp','Ciudad','Fuente','General','VIP','Palco','Total','Notas'];
+  const rows = registros.map(r => [
+    r.id, r.fecha, r.nombre, r.apellido, r.email, r.telefono, r.ciudad || '', r.fuente || '',
+    r.qty.general, r.qty.vip, r.qty.palco, r.total, r.notas || ''
+  ]);
+
+  const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'registros-entradas.csv';
+  a.click();
+  showToast('CSV descargado');
+}
+
+function toggleDB() {
+  document.getElementById('db-panel').classList.toggle('open');
+  renderizarDB();
+}
+
+function actualizarBadge() {
+  const n = obtenerRegistros().length;
+  document.getElementById('db-count-badge').textContent = n;
+  document.getElementById('db-count-tag').textContent = n + (n === 1 ? ' registro' : ' registros');
+}
+
+function renderizarDB() {
+  const registros = obtenerRegistros().slice().reverse();
+  const body = document.getElementById('db-body');
+
+  if (!registros.length) {
+    body.innerHTML = '<div class="db-empty">Aún no hay registros guardados.</div>';
+    return;
+  }
+
+  body.innerHTML = registros.map(r => {
+    const entradas = [];
+    if (r.qty.general > 0) entradas.push(`General ×${r.qty.general}`);
+    if (r.qty.vip > 0) entradas.push(`VIP ×${r.qty.vip}`);
+    if (r.qty.palco > 0) entradas.push(`Palco ×${r.qty.palco}`);
+    return `
+      <div class="db-row">
+        <div class="db-row-name">${r.nombre} ${r.apellido}</div>
+        <div class="db-row-detail">${r.email} · ${r.telefono}</div>
+        <div class="db-row-detail" style="margin-top:2px">
+          ${r.ciudad ? r.ciudad + ' · ' : ''}$${r.total.toLocaleString()} · ${r.fecha}
+        </div>
+        <div style="margin-top:4px">
+          ${entradas.map(e => `<span class="db-row-ticket">${e}</span>`).join(' ')}
+        </div>
+      </div>`;
+  }).join('');
+}
+
+// ─── TOAST ───────────────────────────────────────────────────────
+function showToast(msg, bg = '#085041') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.background = bg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────
+actualizarBadge();
+</script>
+</body>
+</html>
